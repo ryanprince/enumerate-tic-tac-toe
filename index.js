@@ -1,22 +1,25 @@
 import TicTacToe from "./TicTacToe.js";
 
-const enumerateGameStates = (g = new TicTacToe(), validGameStateHashes = new Set()) => {
+const enumerateGameStates = (g = new TicTacToe(), seenGameStatesHashes = new Set()) => {
   if (!g.isValidGameState()) {
     throw new Error(`Cannot enumerate from invalid game state:\n${g}`);
   }
 
-  validGameStateHashes.add(g.toString());
+  seenGameStatesHashes.add(g.toString());
 
   const nextStates = g.availableMoves()
     .map(move => g.makeMove(move))
-    .filter(next => !validGameStateHashes.has(next.toString()));
+    .filter(next => !seenGameStatesHashes.has(next.toString()));
 
-  return [g, ...nextStates.flatMap((state) => enumerateGameStates(state, validGameStateHashes))];
+  return [g, ...nextStates.flatMap((state) => enumerateGameStates(state, seenGameStatesHashes))];
 };
 
 const validGameStates = enumerateGameStates();
 
-console.log(validGameStates.length); // 5478
+// Print the numer of valid game states, which should be 5478.
+console.log(validGameStates.length);
+
+// Print the valid game states that were counted.
 validGameStates.forEach((g, i) => {
   console.log(`Game state #${i + 1}:\n${g.toString()}`);
 });

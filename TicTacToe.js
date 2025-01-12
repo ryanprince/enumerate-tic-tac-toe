@@ -15,20 +15,31 @@ export default class TicTacToe {
   }
 
   clone() {
-    const newBoard = this.board.map(row => [...row]);
-    return new TicTacToe(newBoard);
+    return new TicTacToe(this.board.map(row => [...row]));
+  }
+
+  count(symbol) {
+    return this.board.flat().filter(cell => cell === symbol).length;
   }
 
   xCount() {
-    return this.board.flat().filter(cell => cell === this.X).length;
+    return this.count(this.X);
   }
 
   oCount() {
-    return this.board.flat().filter(cell => cell === this.O).length;
+    return this.count(this.O);
   }
 
   blankCount() {
-    return this.board.flat().filter(cell => cell === this.BLANK).length;
+    return this.count(this.BLANK);
+  }
+
+  isValidGameState() {
+    const xCount = this.xCount();
+    const oCount = this.oCount();
+    const blankCount = this.blankCount();
+    return (xCount === oCount || xCount === oCount + 1) && blankCount + xCount + oCount === 9;
+    // Todo: also check to make sure nobody has won twice. Currently, other logic prevents this from happening.
   }
 
   nextSymbolToMove() {
@@ -38,17 +49,17 @@ export default class TicTacToe {
   }
 
   availableMoves() {
-    const moves = [];
-    if (this.isValidGameState() && !this.getWinner()) {
-      for (let row = 0; row < 3; row++) {
-        for (let col = 0; col < 3; col++) {
-          if (this.board[row][col] === this.BLANK) {
-            moves.push({ symbol: this.nextSymbolToMove(), row, col });
-          }
-        }
-      }
-    }
-    return moves;
+    return this.getWinner()
+      // If there is a winner, there are no available moves.  
+      ? []
+      // Otherwise, generate candidate moves and filter out moves that are not valid.
+      : [0, 1, 2].flatMap(row => [0, 1, 2].map(col => ({ symbol: this.nextSymbolToMove(), row, col })))
+        .filter(({ row, col }) => this.board[row][col] === this.BLANK)
+        .filter(({ symbol, row, col }) => {
+          const nextState = this.clone();
+          nextState.board[row][col] = symbol;
+          return nextState.isValidGameState();
+        });
   }
 
   getWinner() {
@@ -76,7 +87,7 @@ export default class TicTacToe {
   }
 
   isValidMove({ symbol, row, col }) {
-    return this.availableMoves().some(move => move.symbol === symbol && move.row === row && move.col === col);
+    return this.availableMoves().some(({ symbol: s, row: r, col: c }) => symbol === s && row === r && col === c);
   }
 
   makeMove({ symbol, row, col }) {
@@ -86,21 +97,5 @@ export default class TicTacToe {
     const updatedGame = this.clone();
     updatedGame.board[row][col] = symbol;
     return updatedGame.isValidGameState() ? updatedGame : null;
-  }
-
-  isBoardFull() {
-    return this.availableMoves().length === 0;
-  }
-
-  isValidGameState() {
-    const xCount = this.xCount();
-    const oCount = this.oCount();
-    const blankCount = this.blankCount();
-
-    if (xCount < oCount || xCount > oCount + 1 || blankCount + xCount + oCount !== 9) {
-      return false;
-    }
-
-    return true;
   }
 }
